@@ -1,9 +1,9 @@
 'use strict';
 
 /**
- * author service.
+ * action-link service
  */
 
 const { createCoreService } = require('@strapi/strapi').factories;
 
-module.exports = createCoreService('api::author.author');
+module.exports = createCoreService('api::action-link.action-link');

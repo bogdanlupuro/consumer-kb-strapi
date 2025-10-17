@@ -10,13 +10,20 @@
   "options": {
     "draftAndPublish": false
   },
-  "pluginOptions": {},
+  "pluginOptions": {
+    "i18n": {
+      "localized": true
+    }
+  },
   "attributes": {
     "name": {
-      "type": "string"
-    },
-    "slug": {
-      "type": "uid"
+      "type": "string",
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      },
+      "required": true
     },
     "articles": {
       "type": "relation",
@@ -24,8 +31,20 @@
       "target": "api::article.article",
       "mappedBy": "category"
     },
+    "action_links": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::action-link.action-link",
+      "mappedBy": "category"
+    },
     "description": {
-      "type": "text"
+      "type": "text",
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      },
+      "required": true
     }
   }
 }
