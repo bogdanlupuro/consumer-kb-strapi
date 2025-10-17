@@ -39,6 +39,11 @@
         }
       },
       "required": true
+    },
+    "action_links": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::action-link.action-link"
     }
   }
 }
