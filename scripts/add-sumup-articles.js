@@ -17,7 +17,8 @@ async function addSumupArticles() {
     console.warn(`⚠️  Dataset for locale "${LOCALE}" not found. Falling back to EN.`);
     dataset = require('./data/sumup.en');
   }
-  const { categoryDescriptions, articles: sumupArticles } = dataset;
+  const { categories = [], articles: sumupArticles } = dataset;
+  const categoryByKey = new Map(categories.map(c => [c.key, c]));
 
   const slug = (s) => (s || '').toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
   console.log(`📝 Adding ${sumupArticles.length} SumUp Pay articles to: ${STRAPI_URL} (locale=${LOCALE})`);
@@ -47,13 +48,38 @@ async function addSumupArticles() {
     console.log('📂 Ensuring categories exist...');
     const categoryNameToId = {};
     const uniqueCategoryNames = Array.from(new Set(sumupArticles.map(a => a.categoryName)));
+    const uniqueCategoryKeys = Array.from(new Set(sumupArticles.map(a => a.categoryKey).filter(Boolean)));
     
+    // Ensure categories defined with keys first
+    for (const key of uniqueCategoryKeys) {
+      const def = categoryByKey.get(key);
+      if (!def) continue;
+      const name = def.name;
+      try {
+        const authHeader = { Authorization: `Bearer ${token}` };
+        const catExternalKey = `cat:${key}`;
+        const searchRes = await axios.get(`${STRAPI_URL}/api/categories`, {
+          params: { 'filters[external_key][$eq]': catExternalKey, 'filters[locale][$eq]': LOCALE, 'pagination[pageSize]': 1 },
+          headers: { ...authHeader }
+        });
+        if (Array.isArray(searchRes.data?.data) && searchRes.data.data.length > 0) {
+          categoryNameToId[name] = searchRes.data.data[0].id;
+        } else {
+          const createRes = await axios.post(`${STRAPI_URL}/api/categories`, { data: { name, description: def.description || name, locale: LOCALE, external_key: catExternalKey } }, { headers: { ...authHeader, 'Content-Type': 'application/json' } });
+          categoryNameToId[name] = createRes.data.data.id;
+        }
+      } catch (e) {
+        console.error(`⚠️  Could not ensure category key "${key}":`, e.response?.data || e.message);
+      }
+    }
+
+    // Ensure any remaining categories (without keys)
     for (const name of uniqueCategoryNames) {
       try {
         const authHeader = { Authorization: `Bearer ${token}` };
 
-        // Derive stable external key for category (prefer explicit key if provided in dataset later)
-        const catExternalKey = `cat:${slug(name)}`;
+        const fromKey = categories.find(c => c.name === name)?.key;
+        const catExternalKey = fromKey ? `cat:${fromKey}` : `cat:${slug(name)}`;
 
         // Try to find existing category by external_key + locale
         const searchRes = await axios.get(
@@ -72,7 +98,7 @@ async function addSumupArticles() {
         // Create if not found
         const createRes = await axios.post(
           `${STRAPI_URL}/api/categories`,
-          { data: { name, description: categoryDescriptions[name] || name, locale: LOCALE, external_key: catExternalKey } },
+          { data: { name, description: (categories.find(c => c.name === name)?.description) || name, locale: LOCALE, external_key: catExternalKey } },
           { headers: { ...authHeader, 'Content-Type': 'application/json' } }
         );
         categoryNameToId[name] = createRes.data.data.id;
