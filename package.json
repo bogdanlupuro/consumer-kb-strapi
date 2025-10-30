@@ -8,6 +8,8 @@
     "deploy": "strapi deploy",
     "develop": "strapi develop",
     "seed:example": "node ./scripts/seed.js",
+    "add:sumup": "node ./scripts/add-sumup-articles.js",
+    "clear:content": "node ./scripts/clear-content.js",
     "start": "strapi start",
     "strapi": "strapi"
   },
@@ -27,5 +29,8 @@
   "engines": {
     "node": ">=18.0.0 <=22.x.x",
     "npm": ">=6.0.0"
+  },
+  "devDependencies": {
+    "dotenv": "^17.2.3"
   }
 }

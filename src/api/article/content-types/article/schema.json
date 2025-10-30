@@ -44,6 +44,14 @@
       "type": "relation",
       "relation": "oneToMany",
       "target": "api::action-link.action-link"
+    },
+    "featured": {
+      "type": "boolean",
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      }
     }
   }
 }
