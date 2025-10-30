@@ -1,14 +1,13 @@
 {
   "kind": "collectionType",
-  "collectionName": "articles",
+  "collectionName": "groups",
   "info": {
-    "singularName": "article",
-    "pluralName": "articles",
-    "displayName": "Article",
-    "description": "Create your blog content"
+    "singularName": "group",
+    "pluralName": "groups",
+    "displayName": "Group"
   },
   "options": {
-    "draftAndPublish": true
+    "draftAndPublish": false
   },
   "pluginOptions": {
     "i18n": {
@@ -26,7 +25,7 @@
       "required": true,
       "unique": true
     },
-    "title": {
+    "name": {
       "type": "string",
       "pluginOptions": {
         "i18n": {
@@ -35,8 +34,8 @@
       },
       "required": true
     },
-    "body": {
-      "type": "richtext",
+    "description": {
+      "type": "string",
       "pluginOptions": {
         "i18n": {
           "localized": true
@@ -44,24 +43,11 @@
       },
       "required": true
     },
-    "action_links": {
+    "articles": {
       "type": "relation",
       "relation": "oneToMany",
-      "target": "api::action-link.action-link"
-    },
-    "featured": {
-      "type": "boolean",
-      "pluginOptions": {
-        "i18n": {
-          "localized": true
-        }
-      }
-    },
-    "group": {
-      "type": "relation",
-      "relation": "manyToOne",
-      "target": "api::group.group",
-      "inversedBy": "articles"
+      "target": "api::article.article",
+      "mappedBy": "group"
     }
   }
 }

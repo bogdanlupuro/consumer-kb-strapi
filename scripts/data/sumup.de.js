@@ -1,22 +1,59 @@
 'use strict';
 
-// German dataset placeholder — currently mirrors English until translations are provided
+// Deutsche Daten – gleiche Keys wie EN, lokalisierte Namen/Beschreibungen/Texte
 const categories = [
-  { key: 'profile', name: 'Profile & Security', description: 'Konto, Verifizierung (KYC), MFA und Profilgrundlagen' },
-  { key: 'transfers', name: 'Transfers', description: 'Senden, Empfangen, Limits und Verifizierungsprüfungen' },
-  { key: 'wallet', name: 'Wallet', description: 'Aufladungen, Zahlungsmethoden und unterstützte Karten' },
-  { key: 'card', name: 'Card', description: 'SumUp Pay Mastercard Nutzung, Gebühren, Abhebungen und Streitfälle' },
-  { key: 'spaces', name: 'Spaces', description: 'Persönliche und gemeinsame Spaces, Ziele und Überweisungen' },
-  { key: 'bill-splitting', name: 'Bill Splitting', description: 'Rechnungen teilen, Gäste und Stornierungen' },
-  { key: 'promotions', name: 'Promotions', description: 'Empfehlungsprogramm, Promo-Codes und Belohnungen' },
-  { key: 'merchants', name: 'Paying Merchants', description: 'QR-Zahlungen und Zahlungslinks' },
+  { key: 'profile', name: 'Profil & Sicherheit', description: 'Konto, Verifizierung (KYC), MFA und grundlegende Profileinstellungen' },
+  { key: 'transfers', name: 'Überweisungen', description: 'Senden, Empfangen, Limits und Sicherheitsprüfungen' },
+  { key: 'wallet', name: 'Wallet', description: 'Aufladen, Zahlungsmethoden und unterstützte Karten' },
+  { key: 'card', name: 'Karte', description: 'SumUp Pay Mastercard: Nutzung, Gebühren, Abhebungen und Einsprüche' },
+  { key: 'spaces', name: 'Spaces', description: 'Eigene und gemeinsame Spaces, Ziele und Umbuchungen' },
+  { key: 'bill-splitting', name: 'Rechnung teilen', description: 'Rechnungen teilen, Gäste und Stornierungen' },
+  { key: 'promotions', name: 'Aktionen', description: 'Empfehlungsprogramm, Promo-Codes und Belohnungen' },
+  { key: 'merchants', name: 'Zahlungen an Händler', description: 'QR-Zahlungen und Zahlungslinks' },
   { key: 'support', name: 'Support', description: 'Hilfe erhalten und Support kontaktieren' }
 ];
 
-// For now, reuse English titles/bodies; replace with real DE translations later
-const { articles: enArticles } = require('./sumup.en');
-// Mirror English structure and keys; replace title/body with DE when ready
-const articles = enArticles;
+const articles = [
+  { key: 'sumup.overview', title: 'Was ist SumUp Pay? Überblick und Grundlagen', categoryKey: 'profile', categoryName: 'Profil & Sicherheit', featured: true, body: `SumUp Pay ist ein E‑Geld‑Wallet mit einer virtuellen Mastercard, mit der Sie online und im Geschäft bezahlen können. Sie können Cashback erhalten, Geld senden und empfangen sowie Ihr Guthaben verwalten. In Großbritannien ist der Dienst gemäß den Electronic Money Regulations von der FCA reguliert.` },
+  { key: 'sumup.free', title: 'Ist die Nutzung von SumUp Pay kostenlos?', categoryKey: 'profile', categoryName: 'Profil & Sicherheit', body: `Für die Standardnutzung – Zahlungen an Händler, Geld an Kontakte senden oder Geld empfangen – fallen keine Gebühren an. Externe Anbieter (z. B. Geldautomaten) können in bestimmten Fällen eigene Gebühren erheben.` },
+  { key: 'sumup.kyc.why', title: 'Warum ist eine Identitätsprüfung (KYC) erforderlich?', categoryKey: 'profile', categoryName: 'Profil & Sicherheit', featured: true, body: `Da SumUp als Zahlungsinstitut zugelassen ist, müssen Nutzer eine KYC‑Prüfung durchlaufen. Sie geben persönliche Daten an, laden Bilder eines gültigen Ausweisdokuments hoch und machen ein Selfie zur Bestätigung. Die Verifizierung schaltet Funktionen wie Aufladen, Cashback und Überweisungen frei.` },
+  { key: 'kyc.id.requirements', title: 'Anforderungen an Ausweisdokumente für KYC', categoryKey: 'profile', categoryName: 'Profil & Sicherheit', body: `Verwenden Sie einen gültigen, nicht abgelaufenen Ausweis mit gut erkennbarem Foto. Der Name im Profil muss mit dem Ausweis übereinstimmen. Laden Sie qualitativ hochwertige Bilder hoch, die das gesamte Dokument zeigen, um Verzögerungen zu vermeiden.` },
+  { key: 'profile.mfa', title: 'Profil absichern mit Multi‑Faktor‑Authentifizierung (MFA)', categoryKey: 'profile', categoryName: 'Profil & Sicherheit', body: `Aktivieren Sie MFA in den Profileinstellungen. Bei der Anmeldung auf einem neuen Gerät kann eine Bestätigung über die Gerätesicherheit und per E‑Mail erforderlich sein. MFA bietet eine zusätzliche Schutzebene für Ihre Finanzen.` },
+  { key: 'profile.consumer-code', title: 'Wo finde ich meinen Verbrauchercode?', categoryKey: 'profile', categoryName: 'Profil & Sicherheit', body: `Öffnen Sie die App, tippen Sie oben rechts auf die Schaltfläche und scrollen Sie nach unten. Ihr 8‑stelliger Verbrauchercode hilft dem Support, Ihr Konto zu verifizieren. Teilen Sie ihn nur auf Anfrage mit dem offiziellen Support.` },
+
+  { key: 'transfers.qr.personal', title: 'Ihr persönlicher QR‑Code: Bedeutung und Fundort', categoryKey: 'transfers', categoryName: 'Überweisungen', body: `Ihr persönlicher QR‑Code ist eindeutig Ihrem Profil zugeordnet. Andere können ihn scannen, um Ihr Profil zu sehen und – sofern sie SumUp Pay nutzen – Geld zu senden oder anzufordern. Sie finden ihn über den Tab „Scannen“ > „Mein Code“ oder im Profil unter „Geld erhalten“.` },
+  { key: 'transfers.limits.sending', title: 'Sende‑Limits für Überweisungen', categoryKey: 'transfers', categoryName: 'Überweisungen', body: `Für Überweisungen können Limits gelten – z. B. pro Überweisung, pro Tag und pro Monat. Höhere Beträge können zusätzliche Prüfungen erfordern, um Sicherheit und Compliance zu gewährleisten.` },
+  { key: 'transfers.limits.receiving', title: 'Empfangs‑Limits und Dauer', categoryKey: 'transfers', categoryName: 'Überweisungen', body: `Für Banküberweisungen auf Ihr Konto gibt es grundsätzlich kein fixes Limit, größere Beträge können jedoch länger dauern (Betrugsprävention). Beim Aufladen per Karte gelten tägliche und wöchentliche Grenzen und eine begrenzte Anzahl von Aufladungen pro Tag.` },
+  { key: 'transfers.guest-payments', title: 'Geld von Personen erhalten, die SumUp Pay nicht nutzen', categoryKey: 'transfers', categoryName: 'Überweisungen', body: `Nicht‑Nutzer können Ihnen über einen sicheren Link und eine Web‑Checkout‑Seite Geld senden. Sie erhalten einen Link und können auch ohne App bezahlen. Für Gastzahlungen können Betragsgrenzen gelten.` },
+  { key: 'transfers.verification', title: 'Wie SumUp Überweisungen verifiziert', categoryKey: 'transfers', categoryName: 'Überweisungen', body: `Bei Überweisungen werden Name und Kontodaten abgeglichen, um Fehlüberweisungen zu vermeiden. So wird sichergestellt, dass Ihr Geld den richtigen Empfänger erreicht.` },
+
+  { key: 'wallet.topup', title: 'Ihr SumUp Pay Guthaben aufladen', categoryKey: 'wallet', categoryName: 'Wallet', featured: true, body: `Laden Sie Ihr Guthaben mit einer verknüpften Karte oder per Banküberweisung (Kontonummer und Sort Code) auf. Überweisungen können jederzeit gesendet werden; Auszahlungen zurück auf Ihr Bankkonto sind ebenfalls möglich.` },
+  { key: 'wallet.cards.manage', title: 'Zahlungskarten aktualisieren oder ändern', categoryKey: 'wallet', categoryName: 'Wallet', body: `Verwalten Sie Karten unter Profil > Zahlungsmethoden. Sie können Karten deaktivieren oder neue hinzufügen. Nach dem Hinzufügen lassen sich Karten nicht bearbeiten – entfernen Sie die Karte und fügen Sie sie erneut hinzu. Es gelten Limits für die Anzahl neuer Karten pro Zeitraum.` },
+  { key: 'wallet.cards.supported', title: 'Unterstützte Karten für das Aufladen', categoryKey: 'wallet', categoryName: 'Wallet', body: `In Großbritannien werden in der Regel britische Debit‑ und Prepaid‑Karten unterstützt. Einige Kartentypen – etwa Kreditkarten oder Karten außerhalb des UK – werden für Aufladungen nicht akzeptiert.` },
+
+  { key: 'card.fees', title: 'Gebühren und Bargeldabhebungen mit der SumUp Pay Mastercard', categoryKey: 'card', categoryName: 'Karte', featured: true, body: `Die Karte ist kostenlos. Sie haben pro Monat eine begrenzte Anzahl kostenloser Abhebungen (inländisch und international zusammen). Danach fällt pro Abhebung ein prozentualer Fixsatz an. Geldautomatenbetreiber können eigene Gebühren erheben.` },
+  { key: 'card.virtual.atm', title: 'Virtuelle Karte an kartenlosen Geldautomaten nutzen', categoryKey: 'card', categoryName: 'Karte', body: `Sie können an kompatiblen kontaktlosen Geldautomaten mit Ihrer virtuellen Karte über eine Mobile‑Wallet abheben. Halten Sie Ihr Gerät an das Kontaktlos‑Symbol und geben Sie Ihre PIN ein. Die PIN lässt sich in der App festlegen oder ändern.` },
+  { key: 'card.unsupported', title: 'Nicht unterstützte Transaktionen und eingeschränkte Kategorien', categoryKey: 'card', categoryName: 'Karte', body: `Bestimmte Transaktionen (z. B. einige Wallet‑Zahlungen oder Glücksspiel) werden nicht unterstützt. Prüfen Sie die aktuellen Nutzungsbedingungen zu eingeschränkten Kategorien.` },
+  { key: 'card.unrecognised-transaction', title: 'Unbekannte Buchung entdeckt – was tun?', categoryKey: 'card', categoryName: 'Karte', body: `Sperren Sie Ihre Karte sofort in der App (Karte > „Einfrieren“). Kontaktieren Sie bei Bedarf den Support. Sie können die Karte jederzeit wieder entsperren. Bei Einsprüchen führt Sie der Support durch die nächsten Schritte.` },
+  { key: 'card.chargehold', title: 'Karte belastet, Händler sieht „fehlgeschlagen“ – warum?', categoryKey: 'card', categoryName: 'Karte', body: `Gelegentlich erscheinen Vormerkungen oder temporäre Autorisierungen, auch wenn der Händler einen Fehlschlag sieht. Diese heben sich normalerweise automatisch auf. Bleibt eine Buchung bestehen, wenden Sie sich mit den Details an den Support.` },
+
+  { key: 'spaces.create', title: 'Spaces: Sparziele erstellen und verwalten', categoryKey: 'spaces', categoryName: 'Spaces', featured: true, body: `Erstellen Sie bis zu einer bestimmten Anzahl von Spaces, um Geld für Ziele zu organisieren. Jeder Space kann eigenen Namen, Emoji, Farbe und Kontodaten für Überweisungen haben. Planen Sie regelmäßige Umbuchungen und bewegen Sie Geld zwischen Spaces und Hauptguthaben.` },
+  { key: 'spaces.shared', title: 'Gemeinsame Spaces: Mitglieder einladen und verwalten', categoryKey: 'spaces', categoryName: 'Spaces', body: `Erstellen Sie einen gemeinsamen Space, um Geld mit anderen SumUp Pay Nutzern zu verwalten. Laden Sie Mitglieder ein, verfolgen Sie Umbuchungen und setzen Sie Ziele. Der Eigentümer behält die rechtliche Inhaberschaft; Mitglieder erhalten Berechtigungen zum Verwalten.` },
+  { key: 'spaces.editing', title: 'Space bearbeiten, löschen oder verlassen', categoryKey: 'spaces', categoryName: 'Spaces', body: `Sie können einen Space über das Menü bearbeiten oder löschen. Beim Löschen fließt das Guthaben zurück auf Ihr Hauptkonto. Bei gemeinsamen Spaces kann nur der Eigentümer löschen. Mitglieder können gemeinsame Spaces jederzeit verlassen.` },
+
+  { key: 'bill-splitting.howto', title: 'Rechnung teilen: So funktioniert’s', categoryKey: 'bill-splitting', categoryName: 'Rechnung teilen', body: `Öffnen Sie eine bezahlte Transaktion und wählen Sie „Rechnung teilen“. Wählen Sie Kontakte aus, legen Sie gleiche oder individuelle Beträge fest und senden Sie Anfragen. Verfolgen Sie den Status in Echtzeit. Nur Zahlungen an Unternehmen sind teilbar.` },
+  { key: 'bill-splitting.guests', title: 'Mit Freunden teilen, die die App nicht haben', categoryKey: 'bill-splitting', categoryName: 'Rechnung teilen', body: `Nicht‑Nutzer können über eine Webseite mit Kartendaten oder Apple/Google Pay bezahlen. Sie sehen Aktualisierungen, sobald Freunde ihren Anteil zahlen; das Geld erscheint in Ihrem Hauptguthaben.` },
+  { key: 'bill-splitting.cancel', title: 'Teilungsanfrage stornieren oder bearbeiten', categoryKey: 'bill-splitting', categoryName: 'Rechnung teilen', body: `Eine Teilungsanfrage kann nur storniert werden, wenn noch niemand bezahlt hat. Sobald jemand gezahlt hat, ist eine Stornierung nicht mehr möglich. Empfänger können Anfragen ablehnen.` },
+
+  { key: 'promotions.referrals', title: 'Empfehlungsprogramm: Grundlagen und Belohnungen', categoryKey: 'promotions', categoryName: 'Aktionen', body: `Empfehlen Sie Freunde und erhalten Sie Belohnungen, sobald diese die Voraussetzungen erfüllen. Die Gutschrift erfolgt innerhalb eines angegebenen Zeitraums. Beide Konten müssen in der Regel verifiziert und in gutem Zustand sein.` },
+  { key: 'promotions.promo-code', title: 'Promo‑Code hinzufügen', categoryKey: 'promotions', categoryName: 'Aktionen', body: `Öffnen Sie das Profilmenü und wählen Sie „Code eingeben“, um einen Promo‑Code einzulösen. Codes können Voraussetzungen und Laufzeiten haben. Details finden Sie in den Bedingungen.` },
+
+  { key: 'merchant.qr', title: 'Per QR‑Code bei teilnehmenden Händlern bezahlen', categoryKey: 'merchants', categoryName: 'Zahlungen an Händler', featured: true, body: `Scannen Sie den QR‑Code eines Händlers im Geschäft oder auf dessen Gerät/Anzeige. In der App sehen Sie Betrag und Händlername; bestätigen Sie zur Zahlung. Schnell, sicher, ohne physische Karte.` },
+  { key: 'merchant.payment-links', title: 'Wie Zahlungslinks funktionieren', categoryKey: 'merchants', categoryName: 'Zahlungen an Händler', body: `Händler können Zahlungslinks per E‑Mail, SMS oder Messenger senden. Beim Antippen öffnet sich die App und zeigt den Betrag an. Bestätigen Sie die Zahlung mit der gewünschten Methode oder Ihrem Guthaben.` },
+  { key: 'merchant.cash-advance-fees', title: 'Bargeldvorschuss‑Gebühren bei Zahlungslinks vermeiden', categoryKey: 'merchants', categoryName: 'Zahlungen an Händler', body: `Einige Banken werten bestimmte Kartenzahlungen als Bargeldvorschuss. Um Gebühren zu vermeiden, zahlen Sie möglichst mit Wallet‑Guthaben oder einer verknüpften Debitkarte (falls unterstützt).` },
+
+  { key: 'support.contact', title: 'Nicht fündig geworden? Support kontaktieren', categoryKey: 'support', categoryName: 'Support', body: `Wenn Sie im Hilfe‑Center keine Antwort finden, kontaktieren Sie den Support direkt aus der App. Halten Sie Ihren Verbrauchercode und relevante Details bereit, um die Bearbeitung zu beschleunigen.` },
+];
 
 module.exports = { categories, articles };
 

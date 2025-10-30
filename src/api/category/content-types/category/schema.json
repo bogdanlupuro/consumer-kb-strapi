@@ -18,11 +18,13 @@
   "attributes": {
     "external_key": {
       "type": "string",
-      "unique": true,
-      "required": false,
       "pluginOptions": {
-        "i18n": { "localized": false }
-      }
+        "i18n": {
+          "localized": false
+        }
+      },
+      "required": false,
+      "unique": true
     },
     "name": {
       "type": "string",
@@ -32,12 +34,6 @@
         }
       },
       "required": true
-    },
-    "articles": {
-      "type": "relation",
-      "relation": "oneToMany",
-      "target": "api::article.article",
-      "mappedBy": "category"
     },
     "action_links": {
       "type": "relation",

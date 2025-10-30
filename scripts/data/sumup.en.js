@@ -47,6 +47,6 @@ const articles = [
   { key: 'support.contact', title: 'Didn’t find what you need? Contact Support', categoryKey: 'support', categoryName: 'Support', body: `If you can’t find an answer in the help centre, contact the Support team from within the app. Prepare your consumer code and relevant details to speed up troubleshooting.` },
 ];
 
-module.exports = { categoryDescriptions, articles };
+module.exports = { categories, articles };
 
 

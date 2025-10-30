@@ -9,6 +9,7 @@ async function addSumupArticles() {
   const STRAPI_URL = process.env.STRAPI_URL || 'http://localhost:1337';
 
   const LOCALE = process.env.LOCALE || 'en';
+  const BASE_LOCALE = process.env.BASE_LOCALE || 'en';
   // Load locale-specific dataset (fallback to en)
   let dataset;
   try {
@@ -58,6 +59,16 @@ async function addSumupArticles() {
       try {
         const authHeader = { Authorization: `Bearer ${token}` };
         const catExternalKey = `cat:${key}`;
+        // If target locale is not base, link to base documentId
+        let baseDocId;
+        if (LOCALE !== BASE_LOCALE) {
+          const baseRes = await axios.get(`${STRAPI_URL}/api/categories`, {
+            params: { 'filters[external_key][$eq]': catExternalKey, 'filters[locale][$eq]': BASE_LOCALE, 'pagination[pageSize]': 1, 'fields[0]': 'documentId' },
+            headers: { ...authHeader }
+          });
+          baseDocId = baseRes.data?.data?.[0]?.documentId;
+        }
+
         const searchRes = await axios.get(`${STRAPI_URL}/api/categories`, {
           params: { 'filters[external_key][$eq]': catExternalKey, 'filters[locale][$eq]': LOCALE, 'pagination[pageSize]': 1 },
           headers: { ...authHeader }
@@ -65,8 +76,23 @@ async function addSumupArticles() {
         if (Array.isArray(searchRes.data?.data) && searchRes.data.data.length > 0) {
           categoryNameToId[name] = searchRes.data.data[0].id;
         } else {
-          const createRes = await axios.post(`${STRAPI_URL}/api/categories`, { data: { name, description: def.description || name, locale: LOCALE, external_key: catExternalKey } }, { headers: { ...authHeader, 'Content-Type': 'application/json' } });
-          categoryNameToId[name] = createRes.data.data.id;
+          let created;
+          if (baseDocId && LOCALE !== BASE_LOCALE) {
+            // Create or update localization via PUT with locale (localized fields only)
+            created = await axios.put(
+              `${STRAPI_URL}/api/categories/${baseDocId}?locale=${encodeURIComponent(LOCALE)}`,
+              { data: { name, description: def.description || name } },
+              { headers: { ...authHeader, 'Content-Type': 'application/json' } }
+            );
+          } else {
+            // Create normal entry (base or no base found)
+            created = await axios.post(
+              `${STRAPI_URL}/api/categories`,
+              { data: { name, description: def.description || name, locale: LOCALE, external_key: catExternalKey } },
+              { headers: { ...authHeader, 'Content-Type': 'application/json' } }
+            );
+          }
+          categoryNameToId[name] = created.data.data.id;
         }
       } catch (e) {
         console.error(`⚠️  Could not ensure category key "${key}":`, e.response?.data || e.message);
@@ -82,6 +108,15 @@ async function addSumupArticles() {
         const catExternalKey = fromKey ? `cat:${fromKey}` : `cat:${slug(name)}`;
 
         // Try to find existing category by external_key + locale
+        let baseDocId;
+        if (LOCALE !== BASE_LOCALE) {
+          const baseRes = await axios.get(`${STRAPI_URL}/api/categories`, {
+            params: { 'filters[external_key][$eq]': catExternalKey, 'filters[locale][$eq]': BASE_LOCALE, 'pagination[pageSize]': 1, 'fields[0]': 'documentId' },
+            headers: { ...authHeader }
+          });
+          baseDocId = baseRes.data?.data?.[0]?.documentId;
+        }
+
         const searchRes = await axios.get(
           `${STRAPI_URL}/api/categories`,
           {
@@ -96,12 +131,21 @@ async function addSumupArticles() {
         }
 
         // Create if not found
-        const createRes = await axios.post(
-          `${STRAPI_URL}/api/categories`,
-          { data: { name, description: (categories.find(c => c.name === name)?.description) || name, locale: LOCALE, external_key: catExternalKey } },
-          { headers: { ...authHeader, 'Content-Type': 'application/json' } }
-        );
-        categoryNameToId[name] = createRes.data.data.id;
+        let created;
+        if (baseDocId && LOCALE !== BASE_LOCALE) {
+          created = await axios.put(
+            `${STRAPI_URL}/api/categories/${baseDocId}?locale=${encodeURIComponent(LOCALE)}`,
+            { data: { name, description: (categories.find(c => c.name === name)?.description) || name } },
+            { headers: { ...authHeader, 'Content-Type': 'application/json' } }
+          );
+        } else {
+          created = await axios.post(
+            `${STRAPI_URL}/api/categories`,
+            { data: { name, description: (categories.find(c => c.name === name)?.description) || name, locale: LOCALE, external_key: catExternalKey } },
+            { headers: { ...authHeader, 'Content-Type': 'application/json' } }
+          );
+        }
+        categoryNameToId[name] = created.data.data.id;
       } catch (e) {
         console.error(`⚠️  Could not ensure category "${name}":`, e.response?.data || e.message);
       }
@@ -111,6 +155,7 @@ async function addSumupArticles() {
     let created = 0;
 
     for (const article of sumupArticles) {
+      if (created > 5) break;
       try {
         const authHeader = { Authorization: `Bearer ${token}` };
         const articleExternalKey = article.key || `art:${slug(article.title)}`;
@@ -127,34 +172,46 @@ async function addSumupArticles() {
         });
 
         if (Array.isArray(existingRes.data?.data) && existingRes.data.data.length > 0) {
-          // Update existing (idempotent upsert)
+          // Update existing
           const docId = existingRes.data.data[0].documentId;
+          const data = (LOCALE === BASE_LOCALE)
+            ? { title: article.title, body: article.body, category: categoryNameToId[article.categoryName], featured: !!article.featured }
+            : { title: article.title, body: article.body, featured: !!article.featured };
           await axios.put(
-            `${STRAPI_URL}/api/articles/${docId}`,
-            { data: { title: article.title, body: article.body, category: categoryNameToId[article.categoryName], featured: !!article.featured, locale: LOCALE } },
+            `${STRAPI_URL}/api/articles/${docId}?locale=${encodeURIComponent(LOCALE)}`,
+            { data },
             { headers: { ...authHeader, 'Content-Type': 'application/json' } }
           );
+          // publish
+          try {
+            await axios.put(`${STRAPI_URL}/api/articles/${docId}?locale=${encodeURIComponent(LOCALE)}`, { data: { publishedAt: new Date().toISOString() } }, { headers: { ...authHeader, 'Content-Type': 'application/json' } });
+          } catch {}
           console.log(`♻️  Updated: "${article.title}"`);
           created++;
         } else {
-          // Create draft
-          const createResponse = await axios.post(
-            `${STRAPI_URL}/api/articles`,
-            { data: { title: article.title, body: article.body, category: categoryNameToId[article.categoryName], featured: !!article.featured, locale: LOCALE, external_key: articleExternalKey } },
-            { headers: { ...authHeader, 'Content-Type': 'application/json' } }
-          );
-
-          const docId = createResponse.data.data.documentId;
-          console.log(`✅ Created draft: "${article.title}"`);
-
-          await axios.put(
-            `${STRAPI_URL}/api/articles/${docId}`,
-            { data: { publishedAt: new Date().toISOString() } },
-            { headers: { ...authHeader, 'Content-Type': 'application/json' } }
-          );
-
-          console.log(`✅ Published: "${article.title}"`);
-          created++;
+          // Create
+          if (LOCALE === BASE_LOCALE) {
+            const createdArticle = await axios.post(
+              `${STRAPI_URL}/api/articles`,
+              { data: { title: article.title, body: article.body, category: categoryNameToId[article.categoryName], featured: !!article.featured, locale: LOCALE, external_key: articleExternalKey } },
+              { headers: { ...authHeader, 'Content-Type': 'application/json' } }
+            );
+            const docId = createdArticle.data.data.documentId;
+            await axios.put(`${STRAPI_URL}/api/articles/${docId}?locale=${encodeURIComponent(LOCALE)}`, { data: { publishedAt: new Date().toISOString() } }, { headers: { ...authHeader, 'Content-Type': 'application/json' } });
+            console.log(`✅ Created: "${article.title}"`);
+            created++;
+          } else {
+            // Create localization via PUT to base doc
+            const baseRes = await axios.get(`${STRAPI_URL}/api/articles`, { params: { 'filters[external_key][$eq]': articleExternalKey, 'filters[locale][$eq]': BASE_LOCALE, 'pagination[pageSize]': 1, 'fields[0]': 'documentId' }, headers: { ...authHeader } });
+            const baseDocId = baseRes.data?.data?.[0]?.documentId;
+            if (!baseDocId) { console.error(`⚠️  Missing base article for key ${articleExternalKey}`); continue; }
+            await axios.put(`${STRAPI_URL}/api/articles/${baseDocId}?locale=${encodeURIComponent(LOCALE)}`, { data: { title: article.title, body: article.body, featured: !!article.featured } }, { headers: { ...authHeader, 'Content-Type': 'application/json' } });
+            try {
+              await axios.put(`${STRAPI_URL}/api/articles/${baseDocId}?locale=${encodeURIComponent(LOCALE)}`, { data: { publishedAt: new Date().toISOString() } }, { headers: { ...authHeader, 'Content-Type': 'application/json' } });
+            } catch {}
+            console.log(`✅ Localized: "${article.title}" (${LOCALE})`);
+            created++;
+          }
         }
       } catch (error) {
         console.error(`❌ Error creating "${article.title}":`, error.response?.data || error.message);

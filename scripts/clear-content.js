@@ -4,6 +4,31 @@
 require('dotenv').config();
 
 const axios = require('axios');
+const DEBUG = String(process.env.DEBUG || '').toLowerCase() === 'true';
+
+// Debug HTTP logging
+if (DEBUG) {
+  axios.interceptors.request.use((config) => {
+    const method = (config.method || 'GET').toUpperCase();
+    const url = config.url || '';
+    const params = config.params ? ` params=${JSON.stringify(config.params)}` : '';
+    const data = config.data ? ` data=${typeof config.data === 'string' ? config.data : JSON.stringify(config.data)}` : '';
+    console.log(`[HTTP] ${method} ${url}${params}${data}`);
+    return config;
+  });
+  axios.interceptors.response.use(
+    (res) => res,
+    (err) => {
+      const cfg = err.config || {};
+      const method = (cfg.method || 'GET').toUpperCase();
+      const url = cfg.url || '';
+      const status = err.response?.status;
+      const body = err.response?.data ? JSON.stringify(err.response.data) : err.message;
+      console.log(`[HTTP ERROR] ${method} ${url} -> ${status} ${body}`);
+      return Promise.reject(err);
+    }
+  );
+}
 
 async function authenticate(STRAPI_URL) {
   const apiToken = process.env.STRAPI_API_TOKEN;
@@ -20,6 +45,11 @@ async function authenticate(STRAPI_URL) {
   }
 
   throw new Error('Missing STRAPI_API_TOKEN or STRAPI_EMAIL/STRAPI_PASSWORD');
+}
+
+// Hardcoded locales; extend as needed
+function getKnownLocales() {
+  return ['en', 'de'];
 }
 
 async function fetchAll(STRAPI_URL, token, path, params = {}) {
@@ -46,11 +76,29 @@ async function deleteByIds(STRAPI_URL, token, path, ids) {
   let deleted = 0;
   for (const id of ids) {
     try {
+      if (DEBUG) console.log(`   → DELETE ${path}/${id}`);
       await axios.delete(`${STRAPI_URL}${path}/${id}`, { headers: { ...authHeader } });
       deleted += 1;
     } catch (e) {
       const msg = e.response?.data || e.message;
       console.error(`⚠️  Failed to delete ${path}/${id}:`, msg);
+    }
+  }
+  return deleted;
+}
+
+async function deleteByDocumentIdsPerLocale(STRAPI_URL, token, path, docIds, locale) {
+  const authHeader = { Authorization: `Bearer ${token}` };
+  let deleted = 0;
+  for (const docId of docIds) {
+    try {
+      const url = `${STRAPI_URL}${path}/${docId}?locale=${encodeURIComponent(locale)}`;
+      if (DEBUG) console.log(`   → DELETE ${url}`);
+      await axios.delete(url, { headers: { ...authHeader } });
+      deleted += 1;
+    } catch (e) {
+      const msg = e.response?.data || e.message;
+      console.error(`⚠️  Failed to delete ${path}/${docId} (locale=${locale}):`, msg);
     }
   }
   return deleted;
@@ -63,55 +111,58 @@ async function clearContent() {
   try {
     const token = await authenticate(STRAPI_URL);
     const authHeader = { Authorization: `Bearer ${token}` };
+    const locales = getKnownLocales();
 
-    // 1) Delete Articles documents first (delete by documentId to remove all locales/versions)
-    console.log('🗂  Listing Articles (including drafts)...');
-    const articles = await fetchAll(
-      STRAPI_URL,
-      token,
-      '/api/articles',
-      {
-        'publicationState': 'preview',
-        'fields[0]': 'documentId'
-      }
-    );
-    const documentIds = Array.from(new Set(articles.map((a) => a.documentId).filter(Boolean)));
-    console.log(`🗑  Deleting ${documentIds.length} Article documents...`);
+    // 1) Per-locale: list documentIds and delete by documentId scoped to locale
     let deletedArticles = 0;
-    for (const docId of documentIds) {
-      try {
-        await axios.delete(`${STRAPI_URL}/api/articles/${docId}`, { headers: { ...authHeader } });
-        deletedArticles += 1;
-      } catch (e) {
-        const msg = e.response?.data || e.message;
-        console.error(`⚠️  Failed to delete /api/articles/${docId}:`, msg);
-      }
-    }
-    console.log(`✅ Deleted Article documents: ${deletedArticles}`);
-
-    // 2) Delete Categories by documentId to remove all locales
-    console.log('🗂  Listing Categories (all locales)...');
-    const categories = await fetchAll(
-      STRAPI_URL,
-      token,
-      '/api/categories',
-      {
+    for (const locale of locales) {
+      console.log(`🗂  Listing Articles (locale=${locale}, including drafts)...`);
+      const arts = await fetchAll(STRAPI_URL, token, '/api/articles', {
+        'publicationState': 'preview',
+        'filters[locale][$eq]': locale,
         'fields[0]': 'documentId'
-      }
-    );
-    const categoryDocIds = Array.from(new Set(categories.map((c) => c.documentId).filter(Boolean)));
-    console.log(`🗑  Deleting ${categoryDocIds.length} Category documents...`);
-    let deletedCategories = 0;
-    for (const docId of categoryDocIds) {
-      try {
-        await axios.delete(`${STRAPI_URL}/api/categories/${docId}`, { headers: { ...authHeader } });
-        deletedCategories += 1;
-      } catch (e) {
-        const msg = e.response?.data || e.message;
-        console.error(`⚠️  Failed to delete /api/categories/${docId}:`, msg);
+      });
+      const docIds = Array.from(new Set(arts.map((a) => a.documentId).filter(Boolean)));
+      console.log(`🗑  Deleting ${docIds.length} Article documents (locale=${locale})...`);
+      if (DEBUG) console.log(`   DocumentIds (articles/${locale}): ${docIds.join(', ') || '(none)'}`);
+      deletedArticles += await deleteByDocumentIdsPerLocale(STRAPI_URL, token, '/api/articles', docIds, locale);
+      if (DEBUG) {
+        const remain = await fetchAll(STRAPI_URL, token, '/api/articles', {
+          'publicationState': 'preview',
+          'filters[locale][$eq]': locale,
+          'fields[0]': 'id'
+        });
+        console.log(`   Remaining after delete (articles/${locale}): ${remain.length}`);
       }
     }
-    console.log(`✅ Deleted Category documents: ${deletedCategories}`);
+    console.log(`✅ Deleted Articles total: ${deletedArticles}`);
+
+    // 2) Per-locale: list documentIds and delete by documentId scoped to locale
+    let deletedCategories = 0;
+    for (const locale of locales) {
+      console.log(`🗂  Listing Categories (locale=${locale})...`);
+      const cats = await fetchAll(STRAPI_URL, token, '/api/categories', {
+        'filters[locale][$eq]': locale,
+        'fields[0]': 'documentId'
+      });
+      const docIds = Array.from(new Set(cats.map((c) => c.documentId).filter(Boolean)));
+      console.log(`🗑  Deleting ${docIds.length} Category documents (locale=${locale})...`);
+      if (DEBUG) console.log(`   DocumentIds (categories/${locale}): ${docIds.join(', ') || '(none)'}`);
+      deletedCategories += await deleteByDocumentIdsPerLocale(STRAPI_URL, token, '/api/categories', docIds, locale);
+      if (DEBUG) {
+        const remain = await fetchAll(STRAPI_URL, token, '/api/categories', {
+          'filters[locale][$eq]': locale,
+          'fields[0]': 'id'
+        });
+        console.log(`   Remaining after delete (categories/${locale}): ${remain.length}`);
+      }
+    }
+    console.log(`✅ Deleted Categories total: ${deletedCategories}`);
+
+    // Verification step
+    const remainingArticles = await fetchAll(STRAPI_URL, token, '/api/articles', { 'publicationState': 'preview', 'fields[0]': 'id', 'locale': 'all' });
+    const remainingCategories = await fetchAll(STRAPI_URL, token, '/api/categories', { 'fields[0]': 'id', 'locale': 'all' });
+    console.log(`🔎 Remaining - Articles: ${remainingArticles.length}, Categories: ${remainingCategories.length}`);
 
     console.log('\n🎉 Content cleared successfully.');
   } catch (error) {
