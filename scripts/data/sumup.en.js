@@ -1,0 +1,52 @@
+'use strict';
+
+// English dataset for SumUp articles
+const categoryDescriptions = {
+  'Profile & Security': 'Account, verification (KYC), MFA and profile essentials',
+  'Transfers': 'Sending, receiving, limits and verification checks',
+  'Wallet': 'Top-ups, payment methods and supported cards',
+  'Card': 'SumUp Pay Mastercard usage, fees, withdrawals and disputes',
+  'Spaces': 'Personal and Shared Spaces, goals and transfers',
+  'Bill Splitting': 'Split requests, non-app participants and cancellations',
+  'Promotions': 'Referral programme, promo codes and rewards',
+  'Paying Merchants': 'QR code payments and payment links',
+  'Support': 'Getting help and contacting support'
+};
+
+const articles = [
+  { key: 'sumup.overview', title: 'What is SumUp Pay? Overview and basics', categoryKey: 'profile', categoryName: 'Profile & Security', featured: true, body: `SumUp Pay is an e-money wallet with a virtual Mastercard you can use online and in-store. You can earn cashback, send and receive money, and manage balances. In the UK, the service is regulated by the FCA under the Electronic Money Regulations.` },
+  { title: 'Is SumUp Pay free to use?', categoryName: 'Profile & Security', body: `There are no fees for standard use such as paying merchants, sending money to contacts, or receiving payments. Some external providers (e.g., ATMs) may add their own fees in specific scenarios.` },
+  { key: 'sumup.kyc.why', title: 'Why identity verification (KYC) is required', categoryKey: 'profile', categoryName: 'Profile & Security', featured: true, body: `Because SumUp operates as an authorised Payment Institution, users must pass a Know Your Customer (KYC) check. You provide personal details, images of a valid photo ID, and a selfie to confirm identity. Verification unlocks key features such as top-ups, cashback, and transfers.` },
+  { title: 'Identity document requirements for KYC', categoryName: 'Profile & Security', body: `Use a valid, non-expired ID with a clear photo. The name on your profile must match the ID. Upload high-quality images that show the entire document to avoid delays.` },
+  { title: 'Securing your profile with Multi-Factor Authentication (MFA)', categoryName: 'Profile & Security', body: `Enable MFA in your profile settings. When logging in on a new device, you may need to confirm via device security and email. MFA adds an extra layer of protection for your funds and activity.` },
+  { title: 'Where to find your consumer code', categoryName: 'Profile & Security', body: `Open the app, tap the button in the top-right of the home screen, and scroll to the bottom. Your 8-digit consumer code helps Support verify your identity. Don’t share it publicly; only provide it to the official Support team when asked.` },
+  { title: 'Your personal QR code: what it is and where to find it', categoryName: 'Transfers', body: `Your personal QR code is unique to your profile. Others can scan it to view your profile and send or request money if they use SumUp Pay. Find it via the Scan tab > My code, or through your profile under Get paid.` },
+  { title: 'Sending limits for transfers', categoryName: 'Transfers', body: `Transfer limits may apply. Typical examples include per-transfer, daily, and monthly caps. Larger amounts may require additional checks to keep transfers secure and compliant.` },
+  { title: 'Receiving limits and timing', categoryName: 'Transfers', body: `There’s no strict limit for bank transfers into your account, though larger transfers can take longer due to fraud checks. If topping up by card, daily and weekly caps can apply with a limited number of top-ups per day.` },
+  { title: 'Getting paid by people who don’t use SumUp Pay', categoryName: 'Transfers', body: `Non-users can still pay you via a secure link and checkout page. They’ll receive a link and can complete payment on the web if they don’t have the app. Amounts may be capped for guest checkout.` },
+  { title: 'How SumUp verifies your bank transfers', categoryName: 'Transfers', body: `Transfers use name and account detail checks to reduce misdirected payments. This helps make sure your money reaches the correct recipient and prevents errors.` },
+  { key: 'wallet.topup', title: 'Topping up your SumUp Pay balance', categoryKey: 'wallet', categoryName: 'Wallet', featured: true, body: `Top up using a linked card or by bank transfer to your account number and sort code. Bank transfers can be sent from your bank at any time, and you can also withdraw back to your bank.` },
+  { title: 'Updating or changing your payment cards', categoryName: 'Wallet', body: `Manage cards in Profile > Payment methods. You can deactivate existing cards or add new ones. Cards can’t be edited after adding; remove and re-add instead. Limits apply to how many new cards you can add in a period.` },
+  { title: 'Supported cards for adding money', categoryName: 'Wallet', body: `In the UK, supported options typically include UK-issued debit and prepaid cards. Some card types—such as credit cards or non-UK cards—are not supported for top-ups.` },
+  { key: 'card.fees', title: 'Fees and cash withdrawals with your SumUp Pay Mastercard', categoryKey: 'card', categoryName: 'Card', featured: true, body: `The card is free. You have a small number of free ATM withdrawals per month (domestic and international combined). After the free allocation, a fixed percentage fee per withdrawal applies. ATM operators might charge additional fees independently.` },
+  { title: 'Using your virtual card at cardless ATMs', categoryName: 'Card', body: `You can withdraw cash at compatible contactless ATMs using your virtual card through a mobile wallet. Hold your device to the contactless symbol and enter your PIN. You can set or change the PIN in the app.` },
+  { title: 'Unsupported transactions and restricted categories', categoryName: 'Card', body: `Some transaction types (e.g., certain wallet payments or gambling) are not supported. Refer to the latest service terms for restricted categories.` },
+  { title: 'What to do if you see an unrecognised transaction', categoryName: 'Card', body: `Freeze your card in the app immediately (Card > Freeze). Contact Support if you need more help. You can unfreeze the card at any time. For disputed charges, the Support team will guide you through next steps.` },
+  { title: 'Why a business sees a failed transaction but your card was charged', categoryName: 'Card', body: `Occasionally, holds or temporary authorisations can appear even if a merchant sees a failure. These typically reverse automatically. If a charge remains, contact Support with transaction details.` },
+  { key: 'spaces.create', title: 'Spaces: Creating and managing savings goals', categoryKey: 'spaces', categoryName: 'Spaces', featured: true, body: `Create up to a set number of Spaces to organise money by goals. Each Space can have its own name, emoji, colour, and even account details for transfers. Schedule recurring transfers and move money between Spaces and your main balance.` },
+  { title: 'Shared Spaces: inviting and managing members', categoryName: 'Spaces', body: `Create a Shared Space to manage money with others who also use SumUp Pay. Invite members, track transfers, and set a goal. The Space owner retains legal ownership of funds; members are granted permissions to view and manage money.` },
+  { title: 'Editing, deleting, and leaving a Space', categoryName: 'Spaces', body: `You can edit or delete a Space from the Space menu. Deleting a Space moves its funds back to your main balance. For Shared Spaces, only the owner can delete. Members can leave a Shared Space at any time.` },
+  { title: 'How to use Bill Splitting in the app', categoryName: 'Bill Splitting', body: `Open a paid transaction and choose Split bill. Select contacts, set equal or custom amounts, and send requests. Track payment status in real time. Only payments to businesses are eligible for splitting.` },
+  { title: 'Splitting with friends who don’t have the app', categoryName: 'Bill Splitting', body: `Non-users can pay through a web page using card details or Apple/Google Pay. You’ll see updates as friends pay, and the funds will appear in your main balance.` },
+  { title: 'Cancelling or editing a split request', categoryName: 'Bill Splitting', body: `A split can be cancelled only if no one has paid yet. If at least one participant paid, the request can’t be cancelled. Participants can decline a request if needed.` },
+  { title: 'Referral programme basics and rewards', categoryName: 'Promotions', body: `Refer friends and earn rewards once they complete required steps. Rewards are granted within a stated timeframe after successful completion. Both accounts usually need to be verified and in good standing to be eligible.` },
+  { title: 'Adding a promo code in the app', categoryName: 'Promotions', body: `Go to the profile menu and select Enter a code to redeem a promo. Codes may have eligibility and time limits. Check terms for details.` },
+  { key: 'merchant.qr', title: 'Paying via QR code at participating merchants', categoryKey: 'merchants', categoryName: 'Paying Merchants', featured: true, body: `Scan a merchant’s QR code in-store or on their device or display. The app shows the amount and merchant name; confirm to complete payment. This is quick, secure, and does not require a card present.` },
+  { title: 'How payment links work', categoryName: 'Paying Merchants', body: `Merchants can send you a payment link by email, SMS, or messaging apps. Tapping the link opens the app and displays the amount. Confirm to pay using your selected method or balance.` },
+  { title: 'Avoiding cash advance fees on payment links', categoryName: 'Paying Merchants', body: `Some banks treat certain card payments as cash advances. To avoid potential fees, consider paying with your wallet balance or a linked debit card where supported.` },
+  { title: 'Didn’t find what you need? Contact Support', categoryName: 'Support', body: `If you can’t find an answer in the help centre, contact the Support team from within the app. Prepare your consumer code and relevant details to speed up troubleshooting.` },
+];
+
+module.exports = { categoryDescriptions, articles };
+
+

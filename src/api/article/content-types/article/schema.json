@@ -16,6 +16,14 @@
     }
   },
   "attributes": {
+    "external_key": {
+      "type": "string",
+      "unique": true,
+      "required": false,
+      "pluginOptions": {
+        "i18n": { "localized": false }
+      }
+    },
     "title": {
       "type": "string",
       "pluginOptions": {

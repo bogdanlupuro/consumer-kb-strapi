@@ -10,6 +10,7 @@
     "seed:example": "node ./scripts/seed.js",
     "add:sumup": "node ./scripts/add-sumup-articles.js",
     "clear:content": "node ./scripts/clear-content.js",
+    "sync:featured": "node ./scripts/sync-featured-to-remote.js",
     "start": "strapi start",
     "strapi": "strapi"
   },
