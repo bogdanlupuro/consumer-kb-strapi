@@ -24,7 +24,7 @@
       },
       "required": true
     },
-    "link": {
+    "path": {
       "type": "string",
       "pluginOptions": {
         "i18n": {
@@ -46,6 +46,16 @@
       "relation": "manyToOne",
       "target": "api::category.category",
       "inversedBy": "action_links"
+    },
+    "external_key": {
+      "type": "string",
+      "pluginOptions": {
+        "i18n": {
+          "localized": false
+        }
+      },
+      "required": true,
+      "unique": true
     }
   }
 }

@@ -57,10 +57,10 @@
         }
       }
     },
-    "group": {
+    "category": {
       "type": "relation",
       "relation": "manyToOne",
-      "target": "api::group.group",
+      "target": "api::category.category",
       "inversedBy": "articles"
     }
   }

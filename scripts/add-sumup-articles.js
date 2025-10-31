@@ -62,14 +62,14 @@ async function addSumupArticles() {
         // If target locale is not base, link to base documentId
         let baseDocId;
         if (LOCALE !== BASE_LOCALE) {
-          const baseRes = await axios.get(`${STRAPI_URL}/api/groups`, {
+          const baseRes = await axios.get(`${STRAPI_URL}/api/categories`, {
             params: { 'filters[external_key][$eq]': catExternalKey, 'filters[locale][$eq]': BASE_LOCALE, 'pagination[pageSize]': 1, 'fields[0]': 'documentId' },
             headers: { ...authHeader }
           });
           baseDocId = baseRes.data?.data?.[0]?.documentId;
         }
 
-        const searchRes = await axios.get(`${STRAPI_URL}/api/groups`, {
+        const searchRes = await axios.get(`${STRAPI_URL}/api/categories`, {
           params: { 'filters[external_key][$eq]': catExternalKey, 'filters[locale][$eq]': LOCALE, 'pagination[pageSize]': 1 },
           headers: { ...authHeader }
         });
@@ -80,14 +80,14 @@ async function addSumupArticles() {
           if (baseDocId && LOCALE !== BASE_LOCALE) {
             // Create or update localization via PUT with locale (localized fields only)
             created = await axios.put(
-              `${STRAPI_URL}/api/groups/${baseDocId}?locale=${encodeURIComponent(LOCALE)}`,
+              `${STRAPI_URL}/api/categories/${baseDocId}?locale=${encodeURIComponent(LOCALE)}`,
               { data: { name, description: def.description || name } },
               { headers: { ...authHeader, 'Content-Type': 'application/json' } }
             );
           } else {
             // Create normal entry (base or no base found)
             created = await axios.post(
-              `${STRAPI_URL}/api/groups`,
+              `${STRAPI_URL}/api/categories`,
               { data: { name, description: def.description || name, locale: LOCALE, external_key: catExternalKey } },
               { headers: { ...authHeader, 'Content-Type': 'application/json' } }
             );
@@ -110,7 +110,7 @@ async function addSumupArticles() {
         // Try to find existing category by external_key + locale
         let baseDocId;
         if (LOCALE !== BASE_LOCALE) {
-          const baseRes = await axios.get(`${STRAPI_URL}/api/groups`, {
+          const baseRes = await axios.get(`${STRAPI_URL}/api/categories`, {
             params: { 'filters[external_key][$eq]': catExternalKey, 'filters[locale][$eq]': BASE_LOCALE, 'pagination[pageSize]': 1, 'fields[0]': 'documentId' },
             headers: { ...authHeader }
           });
@@ -118,7 +118,7 @@ async function addSumupArticles() {
         }
 
         const searchRes = await axios.get(
-          `${STRAPI_URL}/api/groups`,
+          `${STRAPI_URL}/api/categories`,
           {
             params: { 'filters[external_key][$eq]': catExternalKey, 'filters[locale][$eq]': LOCALE, 'pagination[pageSize]': 1 },
             headers: { ...authHeader }
@@ -134,13 +134,13 @@ async function addSumupArticles() {
         let created;
         if (baseDocId && LOCALE !== BASE_LOCALE) {
           created = await axios.put(
-            `${STRAPI_URL}/api/groups/${baseDocId}?locale=${encodeURIComponent(LOCALE)}`,
+            `${STRAPI_URL}/api/categories/${baseDocId}?locale=${encodeURIComponent(LOCALE)}`,
             { data: { name, description: (categories.find(c => c.name === name)?.description) || name } },
             { headers: { ...authHeader, 'Content-Type': 'application/json' } }
           );
         } else {
           created = await axios.post(
-            `${STRAPI_URL}/api/groups`,
+            `${STRAPI_URL}/api/categories`,
             { data: { name, description: (categories.find(c => c.name === name)?.description) || name, locale: LOCALE, external_key: catExternalKey } },
             { headers: { ...authHeader, 'Content-Type': 'application/json' } }
           );
@@ -155,7 +155,6 @@ async function addSumupArticles() {
     let created = 0;
 
     for (const article of sumupArticles) {
-      if (created > 5) break;
       try {
         const authHeader = { Authorization: `Bearer ${token}` };
         const articleExternalKey = article.key || `art:${slug(article.title)}`;
@@ -175,7 +174,7 @@ async function addSumupArticles() {
           // Update existing
           const docId = existingRes.data.data[0].documentId;
           const data = (LOCALE === BASE_LOCALE)
-            ? { title: article.title, body: article.body, group: categoryNameToId[article.categoryName], featured: !!article.featured }
+            ? { title: article.title, body: article.body, category: categoryNameToId[article.categoryName], featured: !!article.featured }
             : { title: article.title, body: article.body, featured: !!article.featured };
           await axios.put(
             `${STRAPI_URL}/api/articles/${docId}?locale=${encodeURIComponent(LOCALE)}`,
@@ -193,7 +192,7 @@ async function addSumupArticles() {
           if (LOCALE === BASE_LOCALE) {
             const createdArticle = await axios.post(
               `${STRAPI_URL}/api/articles`,
-              { data: { title: article.title, body: article.body, group: categoryNameToId[article.categoryName], featured: !!article.featured, locale: LOCALE, external_key: articleExternalKey } },
+              { data: { title: article.title, body: article.body, category: categoryNameToId[article.categoryName], featured: !!article.featured, locale: LOCALE, external_key: articleExternalKey } },
               { headers: { ...authHeader, 'Content-Type': 'application/json' } }
             );
             const docId = createdArticle.data.data.documentId;

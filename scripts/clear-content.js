@@ -141,16 +141,16 @@ async function clearContent() {
     let deletedCategories = 0;
     for (const locale of locales) {
       console.log(`🗂  Listing Categories (locale=${locale})...`);
-      const cats = await fetchAll(STRAPI_URL, token, '/api/groups', {
+      const cats = await fetchAll(STRAPI_URL, token, '/api/categories', {
         'filters[locale][$eq]': locale,
         'fields[0]': 'documentId'
       });
       const docIds = Array.from(new Set(cats.map((c) => c.documentId).filter(Boolean)));
       console.log(`🗑  Deleting ${docIds.length} Category documents (locale=${locale})...`);
       if (DEBUG) console.log(`   DocumentIds (categories/${locale}): ${docIds.join(', ') || '(none)'}`);
-      deletedCategories += await deleteByDocumentIdsPerLocale(STRAPI_URL, token, '/api/groups', docIds, locale);
+      deletedCategories += await deleteByDocumentIdsPerLocale(STRAPI_URL, token, '/api/categories', docIds, locale);
       if (DEBUG) {
-        const remain = await fetchAll(STRAPI_URL, token, '/api/groups', {
+        const remain = await fetchAll(STRAPI_URL, token, '/api/categories', {
           'filters[locale][$eq]': locale,
           'fields[0]': 'id'
         });
