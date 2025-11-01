@@ -46,6 +46,8 @@ This document describes the data model for the Strapi Knowledge Base system, inc
 │ Relationships:     │  │ Relationships:       │
 │ • belongs to       │  │ • belongs to         │
 │   Category         │  │   Category           │
+│ • has many         │  │                      │
+│   Action Links     │  │                      │
 └────────────────────┘  └──────────────────────┘
            │                    │
            │                    │
@@ -59,6 +61,24 @@ This document describes the data model for the Strapi Knowledge Base system, inc
             ┌──────────────────┐
             │    Category      │
             └──────────────────┘
+           │
+           │
+           │ 1
+           │
+           │
+           ▼
+┌────────────────────┐
+│      Article       │
+│  ───────────────   │
+│  has many          │
+└────────────────────┘
+           │
+           │ many
+           │
+           ▼
+┌──────────────────────┐
+│    Action Link       │
+└──────────────────────┘
 ```
 
 ---
@@ -105,6 +125,7 @@ This document describes the data model for the Strapi Knowledge Base system, inc
 
 **Relationships:**
 - **Many-to-One** with `Category` (via `category` relation)
+- **One-to-Many** with `Action Link` (via `action_links` relation)
 
 **Localization:** ✅ Yes (localized)
 
@@ -130,6 +151,7 @@ This document describes the data model for the Strapi Knowledge Base system, inc
 
 **Relationships:**
 - **Many-to-One** with `Category` (via `category` relation)
+- **Many-to-One** with `Article` (one-way: Article has `action_links`, Action Link has no inverse)
 
 **Localization:** ✅ Yes (localized)
 
@@ -154,6 +176,14 @@ This document describes the data model for the Strapi Knowledge Base system, inc
 - **Inverse side:** Category (contains `action_links` field)
 - **Cardinality:** One category can have many action links
 - **Notes:** Action links can optionally belong to a category
+
+### Article → Action Links (One-to-Many)
+
+- **Type:** One-to-Many
+- **Owning side:** Article (contains `action_links` field)
+- **Inverse side:** Action Link (no inverse field - one-way relation)
+- **Cardinality:** One article can have many action links
+- **Notes:** Action links can be associated with articles for context-specific deep links
 
 ---
 
@@ -210,6 +240,10 @@ All entities support **Strapi i18n localization**:
 - `GET /api/action-links?locale={locale}`
 - `GET /api/action-links/{documentId}?locale={locale}`
 - `GET /api/action-links?locale={locale}&filters[category][external_key][$eq]={key}`
+
+### Populate Relationships
+- `GET /api/articles/{documentId}?locale={locale}&populate[category]=*&populate[action_links]=*`
+- `GET /api/articles?locale={locale}&populate=category,action_links`
 
 ---
 
