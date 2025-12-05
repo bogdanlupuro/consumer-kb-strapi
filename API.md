@@ -353,6 +353,159 @@ GET /api/action-links?locale=en&filters[external_key][$eq]=action.kyc.show&popul
 
 ---
 
+### 9. Search with Meilisearch Edge API
+
+Perform full-text search across articles and categories using Meilisearch Edge API.
+
+**Endpoint:** `POST https://edge.meilisearch.com/indexes/Consumer-KnowledgeBase/search`
+
+**Headers:**
+- `Content-Type: application/json`
+
+**Request Body:**
+```json
+{
+  "q": "search query",
+  "filter": ["locale = en"],
+  "limit": 10,
+  "hybrid": {
+    "embedder": "langdock",
+    "semanticRatio": 0.1
+  }
+}
+```
+
+**Request Body Parameters:**
+- `q` (string, optional): Search query
+- `filter` (array, optional): Filter expressions (e.g., `["locale = en", "category.external_key = 'cat:card'"]`)
+- `limit` (number, optional): Number of results (default: 20, max: 1000)
+- `offset` (number, optional): Number of results to skip (for pagination)
+- `sort` (array, optional): Sort order (e.g., `["createdAt:desc"]`)
+- `hybrid` (object, optional): Hybrid search configuration
+  - `embedder` (string): Embedder name (e.g., `"langdock"`)
+  - `semanticRatio` (number): Ratio of semantic search (0.0 to 1.0)
+
+**Basic Example:**
+```bash
+curl \
+  -X POST 'https://edge.meilisearch.com/indexes/Consumer-KnowledgeBase/search' \
+  -H 'Content-Type: application/json' \
+  --data-binary '{ "q": "kyc verification", "filter": ["locale = en"] }'
+```
+
+**Hybrid Search Example (with semantic search):**
+```bash
+curl \
+  -X POST 'https://edge.meilisearch.com/indexes/Consumer-KnowledgeBase/search' \
+  -H 'Content-Type: application/json' \
+  --data-binary '{ "q": "I do not recognize trnsaction", "filter": ["locale = en"], "limit": 10, "hybrid": { "embedder": "langdock", "semanticRatio": 0.1 } }'
+```
+
+**Hybrid Search with Category Filter:**
+```bash
+curl \
+  -X POST 'https://edge.meilisearch.com/indexes/Consumer-KnowledgeBase/search' \
+  -H 'Content-Type: application/json' \
+  --data-binary '{ "q": "I do not recognize trnsaction", "hybrid": { "embedder": "langdock", "semanticRatio": 0.1 }, "filter": ["locale = en", "category.external_key = '\''cat:card'\''"] }'
+```
+
+**Response:**
+```json
+{
+  "hits": [
+    {
+      "_meilisearch_id": "article-1103",
+      "documentId": "eyd6dqeoj9j4os0xswbouqsv",
+      "title": "What to do if you see an unrecognised transaction",
+      "createdAt": "2025-10-31T08:00:56.139Z",
+      "updatedAt": "2025-10-31T08:03:15.304Z",
+      "locale": "en",
+      "category": {
+        "external_key": "cat:card"
+      },
+      "featured": false,
+      "external_key": "card.unrecognised-transaction"
+    },
+    {
+      "_meilisearch_id": "article-1100",
+      "documentId": "xbu1u18y6lzbt1275dzx1mtm",
+      "title": "Unsupported transactions and restricted categories",
+      "createdAt": "2025-10-31T08:00:54.187Z",
+      "updatedAt": "2025-10-31T08:03:13.802Z",
+      "locale": "en",
+      "category": {
+        "external_key": "cat:card"
+      },
+      "featured": false,
+      "external_key": "card.unsupported"
+    }
+  ],
+  "query": "I do not recognize trnsaction",
+  "processingTimeMs": 21,
+  "limit": 10,
+  "offset": 0,
+  "estimatedTotalHits": 43,
+  "requestUid": "019a4a9e-83de-7e80-b156-13e0aaad0e8f",
+  "semanticHitCount": 10
+}
+```
+
+**Response Fields:**
+- `hits` (array): Array of matching documents
+  - `_meilisearch_id` (string): Meilisearch internal identifier
+  - `documentId` (string): Document ID (shared across locales)
+  - `title` (string): Article title
+  - `createdAt` (string, ISO 8601): Creation timestamp
+  - `updatedAt` (string, ISO 8601): Last update timestamp
+  - `locale` (string): Locale code
+  - `category` (object): Category information (nested)
+    - `external_key` (string): Category external key
+  - `featured` (boolean): Whether article is featured
+  - `external_key` (string): Article external key
+- `query` (string): The search query that was executed
+- `processingTimeMs` (number): Time taken to process the search (milliseconds)
+- `limit` (number): Number of results requested
+- `offset` (number): Number of results skipped
+- `estimatedTotalHits` (number): Estimated total number of matching documents
+- `requestUid` (string): Unique identifier for this search request
+- `semanticHitCount` (number): Number of results from semantic search (only present with hybrid search)
+
+**Common Filter Expressions:**
+- Filter by locale: `["locale = en"]` or `["locale = de"]`
+- Filter by category: `["category.external_key = 'cat:profile'"]`
+- Combine filters: `["locale = en", "category.external_key = 'cat:profile'"]`
+
+**Searchable Fields:**
+- **Articles:** `title`, `body`
+
+**Filterable Fields:**
+- `locale` (string)
+- `category` (object: `external_key`)
+
+**Sortable Fields:**
+- `createdAt` (timestamp)
+- `updatedAt` (timestamp)
+
+**Advanced Examples:**
+
+Search articles in a specific category with hybrid search:
+```bash
+curl \
+  -X POST 'https://edge.meilisearch.com/indexes/Consumer-KnowledgeBase/search' \
+  -H 'Content-Type: application/json' \
+  --data-binary '{ "q": "wallet", "filter": ["locale = en", "category.external_key = '\''cat:wallet'\''"], "limit": 10, "hybrid": { "embedder": "langdock", "semanticRatio": 0.1 } }'
+```
+
+Paginated search:
+```bash
+curl \
+  -X POST 'https://edge.meilisearch.com/indexes/Consumer-KnowledgeBase/search' \
+  -H 'Content-Type: application/json' \
+  --data-binary '{ "q": "card", "filter": ["locale = en"], "limit": 10, "offset": 20, "hybrid": { "embedder": "langdock", "semanticRatio": 0.1 } }'
+```
+
+---
+
 ## Field Reference
 
 ### Article Fields
@@ -408,8 +561,13 @@ GET /api/articles?locale=en&filters[featured][$eq]=true&populate=category&sort=u
 GET /api/action-links?locale=en&populate=category&sort=title:asc
 ```
 
-### Search Articles (Client-Side)
-Fetch all articles for locale and filter client-side, or use Strapi's search if configured.
+### Search with Meilisearch Edge API
+```bash
+curl \
+  -X POST 'https://edge.meilisearch.com/indexes/Consumer-KnowledgeBase/search' \
+  -H 'Content-Type: application/json' \
+  --data-binary '{ "q": "search query", "filter": ["locale = en"], "limit": 20 }'
+```
 
 ### Error Handling
 Standard HTTP status codes:
@@ -438,4 +596,5 @@ Error response format:
 4. **Pagination**: Default pageSize is 25. Use pagination for large result sets.
 5. **Relations**: Use `populate=category` to include category details in article/action-link responses and avoid extra API calls.
 6. **Action Link Paths**: The `path` field in action links contains deep link paths that exclude the domain (e.g., `/kyc`, `/referafriend/app`). Use these paths to navigate within your mobile app. Paths work across all environments since they're domain-agnostic.
+7. **Meilisearch Search**: For full-text search, use the Meilisearch Edge API (`https://edge.meilisearch.com`). The index `Consumer-KnowledgeBase` contains articles and categories. Edge API provides analytics and optimized performance. 
 
