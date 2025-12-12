@@ -4,9 +4,14 @@ module.exports = ({ env }) => ({
       host: env('MEILISEARCH_HOST', 'https://ms-d1c67c9d137c-33016.fra.meilisearch.io'),
       article: {
         indexName: 'Consumer-KnowledgeBase',
-        updateSettingsOnRestart: false,
         entriesQuery: {
-          limit: 1000,
+          limit: 10000,
+        },
+        transformEntry({ entry }) {
+          return {
+            ...entry,
+            contentType: 'article',
+          };
         },
         settings: {
           searchableAttributes: ['title', 'body'],
@@ -16,6 +21,7 @@ module.exports = ({ env }) => ({
             '_meilisearch_id',
             'action_links',
             'body',
+            'contentType',
             'createdAt',
             'documentId',
             'external_key',
@@ -29,9 +35,14 @@ module.exports = ({ env }) => ({
       },
       'action-link': {
         indexName: 'Consumer-KnowledgeBase',
-        updateSettingsOnRestart: false,
         entriesQuery: {
-          limit: 1000,
+          limit: 10000,
+        },
+        transformEntry({ entry }) {
+          return {
+            ...entry,
+            contentType: 'action-link',
+          };
         },
         settings: {
           searchableAttributes: ['title', 'body'],
@@ -41,6 +52,7 @@ module.exports = ({ env }) => ({
             '_meilisearch_id',
             'title',
             'body',
+            'contentType',
             'path',
             'category',
             'external_key',
