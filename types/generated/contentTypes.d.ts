@@ -475,16 +475,16 @@ export interface ApiActionLinkActionLink extends Struct.CollectionTypeSchema {
     };
   };
   attributes: {
-    category: Schema.Attribute.Relation<'manyToOne', 'api::category.category'>;
-    createdAt: Schema.Attribute.DateTime;
-    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
-      Schema.Attribute.Private;
-    description: Schema.Attribute.Text &
+    body: Schema.Attribute.Text &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
           localized: true;
         };
       }>;
+    category: Schema.Attribute.Relation<'manyToOne', 'api::category.category'>;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
     external_key: Schema.Attribute.String &
       Schema.Attribute.Required &
       Schema.Attribute.Unique &
