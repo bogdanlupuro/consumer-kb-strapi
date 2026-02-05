@@ -18,9 +18,9 @@
     "sync:featured": "node ./scripts/sync-featured-to-remote.js"
   },
   "dependencies": {
-    "@strapi/plugin-cloud": "5.15.0",
-    "@strapi/plugin-users-permissions": "5.15.0",
-    "@strapi/strapi": "^5.30.0",
+    "@strapi/plugin-cloud": "^5.34.0",
+    "@strapi/plugin-users-permissions": "^5.34.0",
+    "@strapi/strapi": "^5.34.0",
     "better-sqlite3": "11.3.0",
     "fs-extra": "^10.0.0",
     "mime-types": "^2.1.27",
