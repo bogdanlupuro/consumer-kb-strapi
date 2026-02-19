@@ -268,7 +268,49 @@ async function main() {
   process.exit(0);
 }
 
+const LOCALES = [
+  { code: 'de', name: 'German (de)' },
+  { code: 'es', name: 'Spanish (es)' },
+  { code: 'fr', name: 'French (fr)' },
+  { code: 'it', name: 'Italian (it)' },
+  { code: 'pt-BR', name: 'Portuguese - Brazil (pt-BR)' },
+  { code: 'nl', name: 'Dutch (nl)' },
+  { code: 'bg-BG', name: 'Bulgarian (bg-BG)' },
+  { code: 'el-GR', name: 'Greek (el-GR)' },
+  { code: 'cs-CZ', name: 'Czech (cs-CZ)' },
+  { code: 'da-DK', name: 'Danish (da-DK)' },
+  { code: 'et-EE', name: 'Estonian (et-EE)' },
+  { code: 'fi-FI', name: 'Finnish (fi-FI)' },
+  { code: 'hu-HU', name: 'Hungarian (hu-HU)' },
+  { code: 'lv-LV', name: 'Latvian (lv-LV)' },
+  { code: 'lt-LT', name: 'Lithuanian (lt-LT)' },
+  { code: 'en-MT', name: 'English - Malta (en-MT)' },
+  { code: 'nb-NO', name: 'Norwegian Bokmal (nb-NO)' },
+  { code: 'pl-PL', name: 'Polish (pl-PL)' },
+  { code: 'sk-SK', name: 'Slovak (sk-SK)' },
+  { code: 'sl-SI', name: 'Slovenian (sl-SI)' },
+  { code: 'sv-SE', name: 'Swedish (sv-SE)' },
+  { code: 'pt-PT', name: 'Portuguese - Portugal (pt-PT)' },
+  { code: 'en-IE', name: 'English - Ireland (en-IE)' },
+  { code: 'en-US', name: 'English - US (en-US)' },
+  { code: 'es-US', name: 'Spanish - US (es-US)' },
+];
+
+async function ensureLocales() {
+  const localeService = strapi.plugin('i18n').service('locales');
+  const existing = await localeService.find();
+  const existingCodes = new Set(existing.map((l) => l.code));
+
+  for (const locale of LOCALES) {
+    if (!existingCodes.has(locale.code)) {
+      await localeService.create({ code: locale.code, name: locale.name });
+      strapi.log.info(`[bootstrap] Created locale: ${locale.code}`);
+    }
+  }
+}
+
 
 module.exports = async () => {
   await seedExampleApp();
+  await ensureLocales();
 };
