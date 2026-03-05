@@ -1,3 +1,27 @@
+// Both content types share the same index, so settings must be a superset of both.
+// The last content type re-indexed will overwrite the index settings.
+const sharedSettings = {
+  searchableAttributes: ['title', 'body'],
+  filterableAttributes: ['category', 'contentType', 'locale', 'category.external_key'],
+  sortableAttributes: ['createdAt', 'updatedAt'],
+  displayedAttributes: [
+    '_meilisearch_id',
+    'action_links',
+    'body',
+    'category',
+    'contentType',
+    'createdAt',
+    'documentId',
+    'external_key',
+    'featured',
+    'id',
+    'locale',
+    'path',
+    'title',
+    'updatedAt',
+  ],
+};
+
 module.exports = ({ env }) => ({
   meilisearch: {
     config: {
@@ -6,6 +30,7 @@ module.exports = ({ env }) => ({
         indexName: 'Consumer-KnowledgeBase',
         entriesQuery: {
           limit: 10000,
+          locale: '*',
         },
         transformEntry({ entry }) {
           return {
@@ -13,30 +38,13 @@ module.exports = ({ env }) => ({
             contentType: 'article',
           };
         },
-        settings: {
-          searchableAttributes: ['title', 'body'],
-          filterableAttributes: ['category', 'contentType', 'locale', 'category.external_key'],
-          sortableAttributes: ['createdAt', 'updatedAt'],
-          displayedAttributes: [
-            '_meilisearch_id',
-            'action_links',
-            'body',
-            'contentType',
-            'createdAt',
-            'documentId',
-            'external_key',
-            'featured',
-            'id',
-            'locale',
-            'title',
-            'updatedAt',
-          ],
-        },
+        settings: sharedSettings,
       },
       'action-link': {
         indexName: 'Consumer-KnowledgeBase',
         entriesQuery: {
           limit: 10000,
+          locale: '*',
         },
         transformEntry({ entry }) {
           return {
@@ -44,25 +52,7 @@ module.exports = ({ env }) => ({
             contentType: 'action-link',
           };
         },
-        settings: {
-          searchableAttributes: ['title', 'body'],
-          filterableAttributes: ['category', 'contentType', 'locale', 'category.external_key'],
-          sortableAttributes: ['createdAt', 'updatedAt'],
-          displayedAttributes: [
-            '_meilisearch_id',
-            'title',
-            'body',
-            'contentType',
-            'path',
-            'category',
-            'external_key',
-            'documentId',
-            'id',
-            'locale',
-            'createdAt',
-            'updatedAt',
-          ],
-        },
+        settings: sharedSettings,
       },
     },
   },
